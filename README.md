@@ -18,7 +18,7 @@ Para compilar e executar o programa manualmente basta digitar os seguintes coman
 $ git clone https://github.com/ThiagoCordeiro52/sudoku-solver (faz o clone do repositório em algum diretório do seu pc)
 $ cd sudoku-solver/ (vai até a pasta do repositório clonado)
 $ mkdir build (caso não tenha uma pasta para os executáveis, você deve criá-la com esse comando)
-$ g++ -Wall -std=c++17 -g src/main.cpp -o build/sudoku (compilar)
+$ g++ -Wall -std=c++17 -g src/main.cpp src/graph.cpp -I src/include -o build/sudoku (compilar)
 $ ./build/sudoku <input_content> (executar)
 ```
 
