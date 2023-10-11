@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(include)
 add_executable(sudoku main.cpp
-                      graph.cpp)
+                      graph.cpp
+                      fileio.cpp
+                      dateparse.cpp)
