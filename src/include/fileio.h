@@ -1,12 +1,12 @@
 #ifndef FILEIO_H
 #define FILEIO_H
 
-#include <string>
-#include <vector>
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <cmath>
+#include <string>
+#include <vector>
 
-bool readFile(const std::string& filename, int& rank, std::string& data_str);
+int readFile(const std::string &filename, std::string &data_str);
 
 #endif

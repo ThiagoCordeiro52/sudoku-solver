@@ -1,44 +1,39 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include "cell.h"
 #include <iostream>
-using std::cout;
 #include <list>
-using std::list;
+#include <string>
+#include <vector>
+
+using number_type = unsigned int;
+const number_type RANK = 3;
 
 /// This a class that represents a graph.
 class Graph {
-    public:
-        using number_type = unsigned int;
+public:
+  struct Node {
+    Cell value;
+    bool adjacent[RANK * RANK];
+  };
 
-        struct Node {
-            number_type value;
-            list<Node*> adjacentNodes;
-        };
-        
-        // Constructor
-        Graph();
+  // Constructor
+  Graph(std::string data_str);
 
-        // Public methods
+  // Public methods
 
-        /**
-        *
-        * @brief add a node to the graph
-        * @param value the value of the node
-        */
-        void add_node(number_type value);
+  /**
+   *
+   * @brief print the graph
+   *
+   */
+  void print_graph();
 
-        /**
-        *
-        * @brief print the graph
-        *
-        */
-        void print_graph();
-  
-    private:
-        // Private methods
+private:
+  // Private methods
 
-        // Attributes
-        list<Node*> nodes;
+  // Attributes
+  Node *nodes[RANK * RANK * RANK * RANK];
 };
 #endif
