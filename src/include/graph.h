@@ -11,9 +11,11 @@ using number_type = unsigned int;
 const number_type RANK = 3;
 
 /// This a class that represents a graph.
-class Graph {
+class Graph
+{
 public:
-  struct Node {
+  struct Node
+  {
     Cell value;
     bool adjacent[RANK * RANK];
   };
@@ -32,6 +34,7 @@ public:
 
 private:
   // Private methods
+  bool is_valid_graph();
 
   // Attributes
   Node *nodes[RANK * RANK * RANK * RANK];
