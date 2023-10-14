@@ -6,8 +6,10 @@
 #include "fileio.h"
 #include "graph.h"
 
-int main(int argc, char *argv[]) {
-  if (argc != 2) {
+int main(int argc, char *argv[])
+{
+  if (argc != 2)
+  {
     std::cerr << "You should provide a file name as argument";
     return 1;
   }
@@ -16,7 +18,8 @@ int main(int argc, char *argv[]) {
   std::string data_str;
 
   auto result{readFile(filename, data_str)};
-  if (result != 0) {
+  if (result != 0)
+  {
     return result;
   }
 
@@ -24,9 +27,9 @@ int main(int argc, char *argv[]) {
 
   graph.print_graph();
 
-  graph.solve();
+  // graph.solve();
 
-  graph.print_graph();
+  // graph.print_graph();
 
   return 0;
 }
