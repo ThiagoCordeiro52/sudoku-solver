@@ -2,6 +2,8 @@
 #define GRAPH_H
 
 #include "cell.h"
+#include <algorithm>
+#include <exception>
 #include <iostream>
 #include <list>
 #include <string>
@@ -9,15 +11,30 @@
 
 using number_type = unsigned int;
 const number_type RANK = 3;
+const number_type N_CELLS = RANK * RANK * RANK * RANK;
 
 /// This a class that represents a graph.
-class Graph
-{
+class Graph {
 public:
-  struct Node
-  {
+  struct Node {
     Cell value;
-    bool adjacent[RANK * RANK];
+    bool adjacent[N_CELLS];
+    number_type i;
+    number_type j;
+
+    int saturation() const {
+      return std::count_if(std::begin(adjacent), std::end(adjacent),
+                           [](auto has) { return has; });
+    }
+
+    Cell next_free() const {
+      for (number_type i{0}; i < N_CELLS; i++) {
+        if (!adjacent[i]) {
+          return (Cell)(i + 1);
+        }
+      }
+      throw new std::exception();
+    }
   };
 
   // Constructor
@@ -27,16 +44,33 @@ public:
 
   /**
    *
+   * @brief gets a node from the graph
+   * @param i the line of the node
+   * @param j the column of the node
+   *
+   */
+  Node const &get_node_const(number_type i, number_type j) const;
+  Node *get_node(number_type i, number_type j);
+
+  /**
+   *
    * @brief print the graph
    *
    */
-  void print_graph();
+  void print_graph() const;
+
+  /**
+   *
+   * @brief print the graph
+   *
+   */
+  void solve();
 
 private:
   // Private methods
   bool is_valid_graph();
 
   // Attributes
-  Node *nodes[RANK * RANK * RANK * RANK];
+  Node nodes[N_CELLS];
 };
 #endif

@@ -24,5 +24,9 @@ int main(int argc, char *argv[]) {
 
   graph.print_graph();
 
+  graph.solve();
+
+  graph.print_graph();
+
   return 0;
 }
