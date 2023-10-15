@@ -14,29 +14,22 @@ const number_type RANK = 3;
 const number_type N_CELLS = RANK * RANK * RANK * RANK;
 
 /// This a class that represents a graph.
-class Graph
-{
+class Graph {
 public:
-  struct Node
-  {
+  struct Node {
     Cell value;
     bool adjacent[N_CELLS];
     number_type i;
     number_type j;
 
-    int saturation() const
-    {
+    int saturation() const {
       return std::count_if(std::begin(adjacent), std::end(adjacent),
-                           [](auto has)
-                           { return has; });
+                           [](auto has) { return has; });
     }
 
-    Cell next_free() const
-    {
-      for (number_type i{0}; i < N_CELLS; i++)
-      {
-        if (!adjacent[i])
-        {
+    Cell next_free() const {
+      for (number_type i{0}; i < N_CELLS; i++) {
+        if (!adjacent[i]) {
           return (Cell)(i + 1);
         }
       }
