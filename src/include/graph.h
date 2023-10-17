@@ -10,15 +10,13 @@
 #include <vector>
 
 using number_type = unsigned int;
-const number_type RANK = 3;
-const number_type N_CELLS = RANK * RANK * RANK * RANK;
 
 /// This a class that represents a graph.
 class Graph {
 public:
   struct Node {
     Cell value;
-    bool adjacent[N_CELLS];
+    std::vector<bool> adjacent;
     number_type i;
     number_type j;
 
@@ -27,19 +25,19 @@ public:
                            [](auto has) { return has; });
     }
 
-    Cell next_free() const {
-      for (number_type i{0}; i < N_CELLS; i++) {
+    Cell next_free(number_type n_cells) const {
+      for (number_type i{0}; i < n_cells; i++) {
         if (!adjacent[i]) {
           return (Cell)(i + 1);
         }
       }
+      // unreachable
       throw new std::exception();
-      bool adjacent[RANK * RANK];
     };
   };
 
   // Constructor
-  Graph(std::string data_str);
+  Graph(std::string data_str, number_type rank);
 
   // Public methods
 
@@ -62,7 +60,7 @@ public:
 
   /**
    *
-   * @brief print the graph
+   * @brief solve the sudoku puzzle
    *
    */
   void solve();
@@ -73,6 +71,7 @@ private:
   void mark_adjacent_nodes();
 
   // Attributes
-  Node nodes[N_CELLS];
+  std::vector<Node> nodes;
+  number_type rank;
 };
 #endif

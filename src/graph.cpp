@@ -1,52 +1,58 @@
 #include "graph.h"
 #include "cell.h"
+#include "errors.h"
 #include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <ostream>
 #include <ranges>
 
-Graph::Graph(std::string data_str) {
-  for (auto i{0}; i < data_str.size(); i++) {
-    nodes[i].i = i / (RANK * RANK);
-    nodes[i].j = i % (RANK * RANK);
-    if (data_str[i] == '.') {
-      nodes[i].value = DOT;
+Graph::Graph(std::string data_str, number_type rank) {
+  this->rank = rank;
+  this->nodes.reserve(rank * rank * rank * rank);
+  for (auto k{0}; k < data_str.size(); k++) {
+    Cell cell;
+    if (data_str[k] == '.') {
+      cell = DOT;
     } else {
-      auto number = data_str[i] - '0';
-
-      if (number <= 0 or number > 9) {
-        std::cerr << "each char in second line must be either "
-                     "a dot or a number from 1 to "
-                  << RANK * RANK;
-        exit(5);
+      auto number = data_str[k] - '0';
+      if (number > 9) {
+        number = data_str[k] - 'A' + 10;
       }
-      nodes[i].value = (Cell)number;
+      if (number <= 0 && number > rank * rank) {
+        std::cerr << "each char in second line must be either "
+                     "a dot or a number from 1 to 9 or a letter from A to "
+                  << (char)(rank * rank - 10);
+        exit(INVALID_CHAR);
+      }
+      cell = (Cell)number;
     }
-    for (auto j{0}; j < N_CELLS; j++) {
-      nodes[i].adjacent[j] = false;
-    }
+    std::vector<bool> adjacent(rank * rank * rank * rank, false);
+
+    auto i = k / (rank * rank);
+    auto j = k % (rank * rank);
+    nodes.push_back({cell, adjacent, i, j});
   }
 
   if (!is_valid_graph()) {
     std::cerr << "Invalid sudoku read from input file.";
-    exit(6);
+    exit(INVALID_SUDOKU);
   }
 
   mark_adjacent_nodes();
 }
 
 Graph::Node const &Graph::get_node_const(number_type i, number_type j) const {
-  return nodes[i * RANK * RANK + j];
+  return nodes[i * rank * rank + j];
 }
 
 Graph::Node *Graph::get_node(number_type i, number_type j) {
-  return &nodes[i * RANK * RANK + j];
+  return &nodes[i * rank * rank + j];
 }
 
 void Graph::print_graph() const {
-  for (int i = 0; i < RANK * RANK; i++) {
-    for (int j = 0; j < RANK * RANK; j++) {
+  for (int i = 0; i < rank * rank; i++) {
+    for (int j = 0; j < rank * rank; j++) {
       auto cell = get_node_const(i, j).value;
       if (cell == DOT) {
         std::cout << "  ";
@@ -55,12 +61,12 @@ void Graph::print_graph() const {
       } else {
         std::cout << (char)('A' + static_cast<int>(cell) - 10) << ' ';
       }
-      if ((j + 1) % RANK == 0) {
+      if ((j + 1) % rank == 0) {
         std::cout << "  ";
       }
     }
     std::cout << std::endl;
-    if ((i + 1) % RANK == 0 && (i + 1) < RANK * RANK) {
+    if ((i + 1) % rank == 0 && (i + 1) < rank * rank) {
       std::cout << std::endl;
     }
   }
@@ -68,10 +74,10 @@ void Graph::print_graph() const {
 
 bool Graph::is_valid_graph() {
   // check the lines
-  for (int i = 0; i < RANK * RANK; i++) {
-    bool isNumberPresent[9]{false};
+  for (int i = 0; i < rank * rank; i++) {
+    std::vector<bool> isNumberPresent(rank * rank, false);
 
-    for (int j = 0; j < RANK * RANK; j++) {
+    for (int j = 0; j < rank * rank; j++) {
       int value = static_cast<int>(get_node_const(i, j).value);
 
       if (value == DOT)
@@ -86,10 +92,10 @@ bool Graph::is_valid_graph() {
   }
 
   // check the columns
-  for (int j = 0; j < RANK * RANK; j++) {
-    bool isNumberPresent[9]{false};
+  for (int j = 0; j < rank * rank; j++) {
+    std::vector<bool> isNumberPresent(rank * rank, false);
 
-    for (int i = 0; i < RANK * RANK; i++) {
+    for (int i = 0; i < rank * rank; i++) {
       int value = static_cast<int>(get_node_const(i, j).value);
 
       if (value == DOT)
@@ -104,12 +110,12 @@ bool Graph::is_valid_graph() {
   }
 
   // check the subgrid
-  for (int i = 0; i < RANK; i++) {
-    for (int j = 0; j < RANK; j++) {
-      bool isNumberPresent[9]{false};
+  for (int i = 0; i < rank; i++) {
+    for (int j = 0; j < rank; j++) {
+      std::vector<bool> isNumberPresent(rank * rank, false);
 
-      for (int row = i * RANK; row < (i + 1) * RANK; row++) {
-        for (int col = j * RANK; col < (j + 1) * RANK; col++) {
+      for (int row = i * rank; row < (i + 1) * rank; row++) {
+        for (int col = j * rank; col < (j + 1) * rank; col++) {
           int value = static_cast<int>(get_node_const(row, col).value);
 
           if (value == DOT)
@@ -130,23 +136,23 @@ bool Graph::is_valid_graph() {
 
 void Graph::mark_adjacent_nodes() {
 
-  for (int i = 0; i < N_CELLS; i++) {
-    int row = i / (RANK * RANK);
-    int col = i % (RANK * RANK);
+  for (int i = 0; i < rank * rank * rank * rank; i++) {
+    int row = i / (rank * rank);
+    int col = i % (rank * rank);
 
     auto node_value = get_node(row, col)->value;
 
     if (node_value != DOT) {
-      for (int j = 0; j < RANK * RANK; j++) {
+      for (int j = 0; j < rank * rank; j++) {
         get_node(row, j)->adjacent[node_value - 1] = true;
         get_node(j, col)->adjacent[node_value - 1] = true;
       }
 
-      int gridRow = row / RANK;
-      int gridColumn = col / RANK;
+      int gridRow = row / rank;
+      int gridColumn = col / rank;
 
-      for (int k = gridRow * RANK; k < (gridRow + 1) * RANK; k++) {
-        for (int l = gridColumn * RANK; l < (gridColumn + 1) * RANK; l++) {
+      for (int k = gridRow * rank; k < (gridRow + 1) * rank; k++) {
+        for (int l = gridColumn * rank; l < (gridColumn + 1) * rank; l++) {
           get_node(k, l)->adjacent[node_value - 1] = true;
         }
       }
@@ -169,25 +175,25 @@ void Graph::solve() {
       break;
     }
 
-    max->value = max->next_free();
+    max->value = max->next_free(rank * rank * rank * rank);
 
-    for (auto j{0}; j < RANK * RANK; j++) {
+    for (auto j{0}; j < rank * rank; j++) {
       if (j != max->j) {
         auto node = get_node(max->i, j);
         node->adjacent[max->value - 1] = true;
       }
     }
-    for (auto i{0}; i < RANK * RANK; i++) {
+    for (auto i{0}; i < rank * rank; i++) {
       if (i != max->i) {
         auto node = get_node(i, max->j);
         node->adjacent[max->value - 1] = true;
       }
     }
-    int startRow = (max->i / 3) * 3;
-    int startCol = (max->j / 3) * 3;
+    int startRow = (max->i / rank) * rank;
+    int startCol = (max->j / rank) * rank;
 
-    for (int i = startRow; i < startRow + 3; ++i) {
-      for (int j = startCol; j < startCol + 3; ++j) {
+    for (int i = startRow; i < startRow + rank; ++i) {
+      for (int j = startCol; j < startCol + rank; ++j) {
         if (i != max->i && j != max->j) {
           auto node = get_node(i, j);
           node->adjacent[max->value - 1] = true;
