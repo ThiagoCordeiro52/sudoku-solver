@@ -1,19 +1,18 @@
 #include "fileio.h"
 #include "errors.h"
 #include "graph.h"
+#include <fstream>
 
-int readFile(const std::string &filename, std::string &data_str,
+int readFile(std::istream *input_stream, std::string &data_str,
              number_type &rank) {
-  std::ifstream file{filename};
-
-  if (file.fail()) {
+  if (input_stream->fail()) {
     std::cerr << "could not open file";
     return COULD_NOT_OPEN;
   }
 
   std::string rank_str;
 
-  if (not getline(file >> std::ws, rank_str)) {
+  if (not getline(*input_stream >> std::ws, rank_str)) {
     std::cerr << "could not read rank from file";
     return MISSING_RANK;
   }
@@ -28,7 +27,7 @@ int readFile(const std::string &filename, std::string &data_str,
     return RANK_OUT_OF_RANGE;
   }
 
-  if (not getline(file >> std::ws, data_str)) {
+  if (not getline(*input_stream >> std::ws, data_str)) {
     std::cerr << "could not read data from file";
     return MISSING_DATA;
   }

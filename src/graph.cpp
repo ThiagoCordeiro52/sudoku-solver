@@ -3,6 +3,7 @@
 #include "errors.h"
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <iterator>
 #include <ostream>
 #include <ranges>
@@ -10,6 +11,7 @@
 Graph::Graph(std::string data_str, number_type rank) {
   this->rank = rank;
   this->nodes.reserve(rank * rank * rank * rank);
+  this->largest_value = DOT;
   for (auto k{0}; k < data_str.size(); k++) {
     Cell cell;
     if (data_str[k] == '.') {
@@ -19,6 +21,9 @@ Graph::Graph(std::string data_str, number_type rank) {
       if (number > 9) {
         number = data_str[k] - 'A' + 10;
       }
+      if (rank >= 5) {
+        number = data_str[k] - 'A' + 1;
+      }
       if (number <= 0 && number > rank * rank) {
         std::cerr << "each char in second line must be either "
                      "a dot or a number from 1 to 9 or a letter from A to "
@@ -26,6 +31,9 @@ Graph::Graph(std::string data_str, number_type rank) {
         exit(INVALID_CHAR);
       }
       cell = (Cell)number;
+    }
+    if (cell > this->largest_value) {
+      this->largest_value = cell;
     }
     std::vector<bool> adjacent(rank * rank * rank * rank, false);
 
@@ -51,23 +59,32 @@ Graph::Node *Graph::get_node(number_type i, number_type j) {
 }
 
 void Graph::print_graph() const {
+  std::cout << "|";
+  std::cout << std::setfill('-') << std::setw(rank * (2 * rank + 2) - 1) << "";
+  std::cout << "|" << std::endl;
   for (int i = 0; i < rank * rank; i++) {
+    std::cout << "| ";
     for (int j = 0; j < rank * rank; j++) {
       auto cell = get_node_const(i, j).value;
       if (cell == DOT) {
         std::cout << "  ";
+      } else if (rank >= 5) {
+        std::cout << (char)('A' + static_cast<int>(cell) - 1) << ' ';
       } else if (cell <= 9) {
         std::cout << static_cast<int>(cell) << ' ';
       } else {
         std::cout << (char)('A' + static_cast<int>(cell) - 10) << ' ';
       }
       if ((j + 1) % rank == 0) {
-        std::cout << "  ";
+        std::cout << "| ";
       }
     }
     std::cout << std::endl;
-    if ((i + 1) % rank == 0 && (i + 1) < rank * rank) {
-      std::cout << std::endl;
+    if ((i + 1) % rank == 0) {
+      std::cout << "|";
+      std::cout << std::setfill('-') << std::setw(rank * (2 * rank + 2) - 1)
+                << "";
+      std::cout << "|" << std::endl;
     }
   }
 }
@@ -176,6 +193,10 @@ void Graph::solve() {
     }
 
     max->value = max->next_free(rank * rank * rank * rank);
+
+    if (max->value > this->largest_value) {
+      this->largest_value = max->value;
+    }
 
     for (auto j{0}; j < rank * rank; j++) {
       if (j != max->j) {

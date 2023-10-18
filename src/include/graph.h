@@ -64,6 +64,7 @@ public:
    *
    */
   void solve();
+  Cell largest_value;
 
 private:
   // Private methods

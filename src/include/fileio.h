@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-int readFile(const std::string &filename, std::string &data_str,
+int readFile(std::istream *input_stream, std::string &data_str,
              number_type &rank);
 
 #endif

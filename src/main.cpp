@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <istream>
 #include <iterator>
 
 #include "errors.h"
@@ -8,16 +9,23 @@
 #include "graph.h"
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    std::cerr << "You should provide a file name as argument";
-    return NO_ARGUMENT;
+  std::ifstream file;
+  std::istream *input_stream;
+  if (argc == 2) {
+    file.open(argv[1]);
+    if (!file.is_open()) {
+      std::cerr << "could not open file";
+      return COULD_NOT_OPEN;
+    }
+    input_stream = &file;
+  } else {
+    input_stream = &std::cin;
   }
 
-  auto filename{argv[1]};
   std::string data_str;
   number_type rank;
 
-  auto result{readFile(filename, data_str, rank)};
+  auto result{readFile(input_stream, data_str, rank)};
   if (result != 0) {
     return result;
   }
@@ -26,11 +34,14 @@ int main(int argc, char *argv[]) {
 
   graph.print_graph();
 
-  std::cout << "---------------------" << std::endl;
+  std::cout << std::endl;
 
   graph.solve();
 
   graph.print_graph();
+
+  std::cout << "How close is the solution from the best? "
+            << graph.largest_value - rank * rank << std::endl;
 
   return 0;
 }
