@@ -13,8 +13,8 @@ then
         done
     done
 else
-    for file in /input/$name
+    for file in /input/$1
     do
-        ./build/sudoku input/$name/$file
+        ./build/sudoku input/$1/$file
     done
 fi

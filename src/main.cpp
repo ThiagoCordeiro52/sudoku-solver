@@ -32,16 +32,16 @@ int main(int argc, char *argv[]) {
 
   Graph graph{data_str, rank};
 
-  /* graph.print_graph(); */
-  /*  */
-  /* std::cout << std::endl; */
-  /*  */
-  graph.solve();
-  /*  */
-  /* graph.print_graph(); */
+  graph.print_graph();
 
-  std::cout << "How close is the solution from the best? "
-            << graph.largest_value - rank * rank << std::endl;
+  std::cout << std::endl;
+
+  graph.solve_exact();
+
+  graph.print_graph();
+
+  /* std::cout << "How close is the solution from the best? " */
+  /*           << graph.largest_value - rank * rank << std::endl; */
 
   return 0;
 }

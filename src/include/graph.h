@@ -64,12 +64,20 @@ public:
    *
    */
   void solve();
+
+  /**
+   *
+   * @brief solve the sudoku puzzle
+   *
+   */
+  void solve_exact();
   Cell largest_value;
 
 private:
   // Private methods
   bool is_valid_graph();
   void mark_adjacent_nodes();
+  bool try_solve();
 
   // Attributes
   std::vector<Node> nodes;

@@ -3,7 +3,9 @@
 #include "errors.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <ostream>
 #include <ranges>
@@ -223,3 +225,70 @@ void Graph::solve() {
     }
   }
 }
+
+bool Graph::try_solve() {
+  auto first = nodes.end();
+  for (auto it{nodes.begin()}; it < nodes.end(); it++) {
+    if (it->value == DOT) {
+      first = it;
+      break;
+    }
+  }
+
+  if (first == nodes.end()) {
+    return true;
+  }
+
+  std::vector<bool> used(rank * rank, false);
+
+  for (auto j{0}; j < rank * rank; j++) {
+    if (j != first->j) {
+      auto node = get_node(first->i, j);
+      if (node->value != DOT) {
+        used[node->value - 1] = true;
+      }
+    }
+  }
+  for (auto i{0}; i < rank * rank; i++) {
+    if (i != first->i) {
+      auto node = get_node(i, first->j);
+      if (node->value != DOT) {
+        used[node->value - 1] = true;
+      }
+    }
+  }
+  int startRow = (first->i / rank) * rank;
+  int startCol = (first->j / rank) * rank;
+
+  for (int i = startRow; i < startRow + rank; ++i) {
+    for (int j = startCol; j < startCol + rank; ++j) {
+      if (i != first->i && j != first->j) {
+        auto node = get_node(i, j);
+        if (node->value != DOT) {
+          used[node->value - 1] = true;
+        }
+      }
+    }
+  }
+
+  for (auto i{0}; i < rank * rank; i++) {
+    if (!used[i]) {
+      first->value = (Cell)(i + 1);
+      /* std::cout << "setting (" << first->i << ", " << first->j << ") to " */
+      /*           << first->value << "\n"; */
+      if (try_solve()) {
+        return true;
+      }
+      /* std::cout << "could not solve with (" << first->i << ", " << first->j
+       */
+      /*           << ") as " << first->value << "\n"; */
+    }
+  }
+  /* std::cout << "no value avalible for (" << first->i << ", " << first->j */
+  /*           << ")\n"; */
+
+  first->value = DOT;
+  return false;
+}
+
+void Graph::solve_exact() { try_solve(); }
