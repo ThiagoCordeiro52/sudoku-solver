@@ -5,6 +5,7 @@
 #include <iterator>
 
 #include "errors.h"
+#include "genetic.h"
 #include "fileio.h"
 #include "graph.h"
 
@@ -30,15 +31,15 @@ int main(int argc, char *argv[]) {
     return result;
   }
 
-  Graph graph{data_str, rank};
+  SudokuBoard board{data_str, rank};
 
-  graph.print_graph();
+  board.print_board();
 
   std::cout << std::endl;
 
-  graph.solve_exact();
+  board.genetic_algorithm(0.1, 1000);
 
-  graph.print_graph();
+  board.print_board();
 
   /* std::cout << "How close is the solution from the best? " */
   /*           << graph.largest_value - rank * rank << std::endl; */
