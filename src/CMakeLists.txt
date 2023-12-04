@@ -7,4 +7,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(include)
 add_executable(sudoku main.cpp
                       graph.cpp
+                      genetic.cpp
                       fileio.cpp)
