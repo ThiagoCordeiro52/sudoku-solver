@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
-#include <ranges>
 
 const int POPULATION_SIZE = 3;
 
@@ -30,42 +29,7 @@ SudokuBoard::SudokuBoard(std::string data_str, number_type rank) {
       }
       cell = number;
     }
-    std::vector<bool> adjacent(rank * rank, false);
-
-    auto i = k / (rank * rank);
-    auto j = k % (rank * rank);
-    nodes.push_back({cell, adjacent, i, j});
-  }
-  mark_adjacent_nodes();
-}
-
-SudokuBoard::Node *SudokuBoard::get_node(number_type i, number_type j) {
-  return &nodes[i * rank * rank + j];
-}
-
-void SudokuBoard::mark_adjacent_nodes() {
-
-  for (int i = 0; i < rank * rank * rank * rank; i++) {
-    int row = i / (rank * rank);
-    int col = i % (rank * rank);
-
-    auto node_value = get_node(row, col)->value;
-
-    if (node_value != 0) {
-      for (int j = 0; j < rank * rank; j++) {
-        get_node(row, j)->adjacent[node_value - 1] = true;
-        get_node(j, col)->adjacent[node_value - 1] = true;
-      }
-
-      int gridRow = row / rank;
-      int gridColumn = col / rank;
-
-      for (int k = gridRow * rank; k < (gridRow + 1) * rank; k++) {
-        for (int l = gridColumn * rank; l < (gridColumn + 1) * rank; l++) {
-          get_node(k, l)->adjacent[node_value - 1] = true;
-        }
-      }
-    }
+    nodes.push_back(cell);
   }
 }
 
@@ -74,7 +38,7 @@ SudokuBoard::crossover(const SudokuBoard &first, const SudokuBoard &second) {
   auto size = first.rank * first.rank;
   SudokuBoard first_child;
   SudokuBoard second_child;
-  first_child.nodes = second_child.nodes = std::vector<Node>(size * size);
+  first_child.nodes = second_child.nodes = std::vector<cell_type>(size * size);
   first_child.rank = second_child.rank = first.rank;
   int crossoverPoint = rand() % (size - 1) + 1;
 
@@ -96,35 +60,11 @@ SudokuBoard::crossover(const SudokuBoard &first, const SudokuBoard &second) {
 void SudokuBoard::mutate(SudokuBoard &individual, double mutation_rate) const {
   auto size = rank * rank;
   for (int i = 0; i < size; ++i) {
-    if ((rand() % 100) < mutation_rate * 100) {
-      int j;
-      do {
-        j = rand() % size;
-      } while (nodes[i * size + j].value != 0);
-      int best_candidate = j == 0 ? 1 : 0;
-      std::iter_swap(individual.nodes.begin() + i * size + j,
-                     individual.nodes.begin() + i * size + best_candidate);
-      number_type best_fitness = fitness();
-      std::iter_swap(individual.nodes.begin() + i * size + j,
-                     individual.nodes.begin() + i * size + best_candidate);
-      for (auto candidate = 0; candidate < size; candidate++) {
-        if (j == candidate ||
-            individual.nodes[i * size + candidate].value == 0 ||
-            nodes[i * size + candidate].value != 0) {
-          continue;
-        }
-        std::iter_swap(individual.nodes.begin() + i * size + j,
-                       individual.nodes.begin() + i * size + candidate);
-        number_type fitness_ = fitness();
-        std::iter_swap(individual.nodes.begin() + i * size + j,
-                       individual.nodes.begin() + i * size + candidate);
-        if (fitness_ < best_fitness) {
-          best_candidate = candidate;
-          best_fitness = fitness_;
-        }
+    for (int j = 0; j < size; ++j) {
+      auto index = i * size + j;
+      if (nodes[index] == 0 && (rand() % 100) < mutation_rate * 100) {
+        individual.nodes[index] = rand() % size + 1;
       }
-      std::iter_swap(individual.nodes.begin() + i * size + j,
-                     individual.nodes.begin() + i * size + best_candidate);
     }
   }
 };
@@ -134,15 +74,13 @@ int SudokuBoard::fitness() const {
   int conflicts = 0;
   for (int row = 0; row < size; ++row) {
     for (int col = 0; col < size; ++col) {
-      int num = nodes[row * size + col].value;
+      int num = nodes[row * size + col];
       if (num != 0) {
         for (int i = 0; i < size; ++i) {
           conflicts +=
-              (num == nodes[row * size + i].value ||
-               num == nodes[i * size + col].value ||
+              (num == nodes[row * size + i] || num == nodes[i * size + col] ||
                num == nodes[(row / rank) * rank * size + (col / rank) * rank +
-                            (i / rank) * size + (i % rank)]
-                          .value);
+                            (i / rank) * size + (i % rank)]);
         }
       }
     }
@@ -154,9 +92,11 @@ void SudokuBoard::genetic_algorithm(double mutation_rate, int max_generations) {
   srand(static_cast<unsigned>(time(nullptr)));
 
   std::vector<SudokuBoard> population(POPULATION_SIZE);
-  for (int i = 0; i < POPULATION_SIZE; ++i) {
+  population[0] = *this;
+  for (int i = 1; i < POPULATION_SIZE; ++i) {
     population[i] = generate();
   }
+
   auto compare_fitness = [](const SudokuBoard &a, const SudokuBoard &b) {
     return a.fitness() <= b.fitness();
   };
@@ -186,8 +126,6 @@ void SudokuBoard::genetic_algorithm(double mutation_rate, int max_generations) {
     population = next_generation;
   }
 
-  std::cout << "No solution found" << std::endl;
-
   std::sort(population.begin(), population.end(), compare_fitness);
 
   this->nodes = population[0].nodes;
@@ -198,8 +136,8 @@ bool SudokuBoard::is_valid(number_type row, number_type col,
   auto size = rank * rank;
   // check lines and cols
   for (int i = 0; i < size; ++i) {
-    if (nodes[row * size * size + i].value == num ||
-        nodes[i * size * size + col].value == num) {
+    if (nodes[row * size * size + i] == num ||
+        nodes[i * size * size + col] == num) {
       return false;
     }
   }
@@ -210,7 +148,7 @@ bool SudokuBoard::is_valid(number_type row, number_type col,
   for (int i = 0; i < rank; ++i) {
     for (int j = 0; j < rank; ++j) {
       auto index = (start_row + i) * size * size + (start_col + j);
-      if (nodes[index].value == num) {
+      if (nodes[index] == num) {
         return false;
       }
     }
@@ -220,62 +158,18 @@ bool SudokuBoard::is_valid(number_type row, number_type col,
 };
 
 SudokuBoard SudokuBoard::generate() {
+  auto size = rank * rank;
   SudokuBoard individual;
-  individual.nodes.reserve(rank * rank * rank * rank);
-  for (auto node : nodes) {
-    Node new_node;
-    new_node.adjacent = node.adjacent;
-    new_node.value = node.value;
-    new_node.i = node.i;
-    new_node.j = node.j;
-    individual.nodes.push_back(new_node);
-  }
   individual.rank = rank;
+  individual.nodes.resize(size * size, 0);
+  for (auto i = 1; i <= size; ++i) {
+    for (auto j = 0; j < size; ++j) {
+      int index;
+      do {
+        index = rand() % (size * size);
+      } while (individual.nodes[index] != 0);
 
-  while (true) {
-    bool noEmpty = true;
-
-    for (auto node : individual.nodes) {
-      if (node.value == 0) {
-        noEmpty = false;
-        break;
-      }
-    }
-
-    if (noEmpty) {
-      break;
-    }
-
-    Node *rand_node;
-
-    do {
-      rand_node = &individual.nodes[rand() % individual.nodes.size()];
-    } while (rand_node->value != 0);
-
-    rand_node->value = rand_node->get_random_free(rank * rank);
-
-    for (auto j{0}; j < rank * rank; j++) {
-      if (j != rand_node->j) {
-        auto node = individual.get_node(rand_node->i, j);
-        node->adjacent[rand_node->value - 1] = true;
-      }
-    }
-    for (auto i{0}; i < rank * rank; i++) {
-      if (i != rand_node->i) {
-        auto node = individual.get_node(i, rand_node->j);
-        node->adjacent[rand_node->value - 1] = true;
-      }
-    }
-    int startRow = (rand_node->i / rank) * rank;
-    int startCol = (rand_node->j / rank) * rank;
-
-    for (int i = startRow; i < startRow + rank; ++i) {
-      for (int j = startCol; j < startCol + rank; ++j) {
-        if (i != rand_node->i && j != rand_node->j) {
-          auto node = individual.get_node(i, j);
-          node->adjacent[rand_node->value - 1] = true;
-        }
-      }
+      individual.nodes[index] = i;
     }
   }
   return individual;
@@ -289,14 +183,14 @@ void SudokuBoard::print_board() const {
     std::cout << "| ";
     for (int j = 0; j < rank * rank; j++) {
       auto cell = nodes[i * rank * rank + j];
-      if (cell.value == 0) {
+      if (cell == 0) {
         std::cout << "  ";
       } else if (rank >= 5) {
-        std::cout << (char)('A' + static_cast<int>(cell.value) - 1) << ' ';
-      } else if (cell.value <= 9) {
-        std::cout << static_cast<int>(cell.value) << ' ';
+        std::cout << (char)('A' + static_cast<int>(cell) - 1) << ' ';
+      } else if (cell <= 9) {
+        std::cout << static_cast<int>(cell) << ' ';
       } else {
-        std::cout << (char)('A' + static_cast<int>(cell.value) - 10) << ' ';
+        std::cout << (char)('A' + static_cast<int>(cell) - 10) << ' ';
       }
       if ((j + 1) % rank == 0) {
         std::cout << "| ";
