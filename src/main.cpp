@@ -5,8 +5,8 @@
 #include <iterator>
 
 #include "errors.h"
-#include "genetic.h"
 #include "fileio.h"
+#include "genetic.h"
 #include "graph.h"
 
 int main(int argc, char *argv[]) {
@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
 
   board.print_board();
 
-  /* std::cout << "How close is the solution from the best? " */
-  /*           << graph.largest_value - rank * rank << std::endl; */
+  std::cout << "How close is the solution from the best? " << board.fitness()
+            << std::endl;
 
   return 0;
 }
