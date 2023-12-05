@@ -77,10 +77,23 @@ int SudokuBoard::fitness() const {
       int num = nodes[row * size + col];
       if (num != 0) {
         for (int i = 0; i < size; ++i) {
-          conflicts +=
-              (num == nodes[row * size + i] || num == nodes[i * size + col] ||
-               num == nodes[(row / rank) * rank * size + (col / rank) * rank +
-                            (i / rank) * size + (i % rank)]);
+          if (num == nodes[row * size + i]) {
+            // conflict in row
+            conflicts += 1;
+          } else if (num == nodes[i * size + col]) {
+            // conflict in col
+            conflicts += 1;
+          } else {
+            auto checkRow = (row / rank) * rank + (i / rank);
+            auto checkCol = (col / rank) * rank + (i % rank);
+            if (checkRow == row && checkCol == col) {
+              continue;
+            } else if (num == nodes[checkRow * size + checkCol]) {
+              // conflict in block
+              conflicts += 1;
+              conflicts += 1;
+            }
+          }
         }
       }
     }
